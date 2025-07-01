@@ -36,6 +36,7 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
          b.start_date, 
          b.end_date, 
          b.total_price, 
+         b.status,
          c.model, 
          c.brand
        FROM bookings b
@@ -51,6 +52,26 @@ router.get('/api/bookings', authMiddleware, async (req, res) => {
   }
 });
 
+router.put('/api/bookings/:id/cancel', async (req, res) => {
+  const bookingId = req.params.id;
 
+  try {
+    const [result] = await pool.query(
+      `UPDATE bookings 
+       SET status = 'cancelled', cancelled_at = NOW() 
+       WHERE bookingId = ? AND status = 'active'`,
+      [bookingId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Reserva não encontrada ou já cancelada.' });
+    }
+
+    res.json({ message: 'Reserva cancelada com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao cancelar reserva:', error);
+    res.status(500).json({ error: 'Erro interno ao cancelar a reserva.' });
+  }
+});
 
 module.exports = router;

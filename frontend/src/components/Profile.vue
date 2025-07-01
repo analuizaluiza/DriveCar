@@ -53,6 +53,14 @@
             {{ formatarData(reserva.end_date) }}
           </p>
           <p><strong>Valor Total:</strong> R$ {{ reserva.total_price }}</p>
+          <p><strong>Status:</strong> {{ reserva.status }}</p>
+          <button
+            v-if="reserva.status === 'active'"
+            @click="cancelarReserva(reserva.bookingId)"
+            class="cancel-btn"
+          >
+            Cancelar Reserva
+          </button>
         </li>
       </ul>
     </section>
@@ -81,6 +89,27 @@ export default {
     this.carregarReservas();
   },
   methods: {
+    async cancelarReserva(bookingId) {
+      const confirmar = confirm(
+        "Tem certeza que deseja cancelar esta reserva?"
+      );
+      if (!confirmar) return;
+
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.put(
+          `http://localhost:3000/api/bookings/${bookingId}/cancel`,
+          {},
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        alert(res.data.message || "Reserva cancelada com sucesso!");
+        this.carregarReservas(); // Atualiza lista após cancelamento
+      } catch (erro) {
+        console.error("Erro ao cancelar reserva:", erro);
+        alert("Erro ao cancelar a reserva.");
+      }
+    },
+
     formatarData(dataISO) {
       return new Date(dataISO).toLocaleDateString("pt-BR", {
         timeZone: "UTC",
@@ -104,7 +133,7 @@ export default {
         const res = await axios.get("http://localhost:3000/api/bookings", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("RESERVAS RECEBIDAS:", res.data);
+        console.log("RESERVAS RECEBIDAS:", JSON.stringify(res.data, null, 2));
 
         this.reservas = res.data;
       } catch (erro) {
@@ -154,6 +183,22 @@ export default {
 </script>
 
 <style scoped>
+.cancel-btn {
+  background-color: #c0392b;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  margin-top: 12px;
+}
+
+.cancel-btn:hover {
+  background-color: #a93226;
+}
+
 .reservas-section ul {
   list-style-type: none;
   padding-left: 0;

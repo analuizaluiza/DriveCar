@@ -68,6 +68,10 @@ export default {
     };
   },
   methods: {
+    logout() {
+      localStorage.removeItem("token");
+      this.$router.push("/login");
+    },
     async buscarCarros() {
       this.loading = true;
       try {
